@@ -4,13 +4,14 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import joblib
+import json
 from schemas import PredictRequest
 
 app = FastAPI(title="CropInsight India API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -61,11 +62,12 @@ def overview():
 
 
 @app.get("/api/top-states")
-def top_states(n: int = 10):
+def top_states(n: int = 10, year_min: int = 1997, year_max: int = 2015):
     if df is None:
         raise HTTPException(503, "Dataset not loaded")
+    filtered = df[(df["Crop_Year"] >= year_min) & (df["Crop_Year"] <= year_max)]
     result = (
-        df.groupby("State_Name")["Production"]
+        filtered.groupby("State_Name")["Production"]
         .sum()
         .nlargest(n)
         .reset_index()
@@ -75,11 +77,12 @@ def top_states(n: int = 10):
 
 
 @app.get("/api/top-crops")
-def top_crops(n: int = 10):
+def top_crops(n: int = 10, year_min: int = 1997, year_max: int = 2015):
     if df is None:
         raise HTTPException(503, "Dataset not loaded")
+    filtered = df[(df["Crop_Year"] >= year_min) & (df["Crop_Year"] <= year_max)]
     result = (
-        df.groupby("Crop")["Production"]
+        filtered.groupby("Crop")["Production"]
         .sum()
         .nlargest(n)
         .reset_index()
@@ -89,11 +92,12 @@ def top_crops(n: int = 10):
 
 
 @app.get("/api/season-breakdown")
-def season_breakdown():
+def season_breakdown(year_min: int = 1997, year_max: int = 2015):
     if df is None:
         raise HTTPException(503, "Dataset not loaded")
+    filtered = df[(df["Crop_Year"] >= year_min) & (df["Crop_Year"] <= year_max)]
     result = (
-        df.groupby("Season")
+        filtered.groupby("Season")
         .agg(total_production=("Production", "sum"), avg_yield=("Yield", "mean"), records=("Production", "count"))
         .reset_index()
         .round(2)
@@ -144,6 +148,28 @@ def options():
         "seasons": sorted(df["Season"].unique().tolist()),
         "crops": sorted(df["Crop"].unique().tolist()),
     }
+
+
+@app.get("/api/model-insights")
+def model_insights():
+    if model is None:
+        return {"trained": False}
+    fi = model.feature_importances_
+    feature_names = ["Area", "Year", "Season", "State", "Crop"]
+    importances = [{"feature": n, "importance": round(float(v), 6)} for n, v in sorted(zip(feature_names, fi), key=lambda x: -x[1])]
+    result = {
+        "trained": True,
+        "feature_importances": importances,
+        "rf": {
+            "n_estimators": model.n_estimators,
+        },
+    }
+    model_meta_path = Path("../model/metrics.json")
+    if model_meta_path.exists():
+        metrics = json.loads(model_meta_path.read_text())
+        result["rf"].update(metrics.get("rf", {}))
+        result["lr"] = metrics.get("lr")
+    return result
 
 
 @app.post("/api/predict")
