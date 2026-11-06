@@ -1,12 +1,30 @@
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../ThemeContext'
 
-const links = [
-  { to: '/dashboard', icon: '▦', label: 'Overview' },
-  { to: '/eda',       icon: '◈', label: 'Explore' },
-  { to: '/map',       icon: '◉', label: 'Map' },
-  { to: '/predict',   icon: '◎', label: 'Predict' },
-  { to: '/model',     icon: '◬', label: 'Model' },
+const groups = [
+  {
+    label: 'Analytics',
+    links: [
+      { to: '/dashboard', icon: '▦', label: 'Overview' },
+      { to: '/eda',       icon: '◈', label: 'Explore' },
+      { to: '/map',       icon: '◉', label: 'Map' },
+      { to: '/districts', icon: '⊞', label: 'Districts' },
+    ],
+  },
+  {
+    label: 'Research',
+    links: [
+      { to: '/compare',  icon: '⚖', label: 'Compare' },
+      { to: '/forecast', icon: '◭', label: 'Forecast' },
+    ],
+  },
+  {
+    label: 'ML',
+    links: [
+      { to: '/predict', icon: '◎', label: 'Predict' },
+      { to: '/model',   icon: '◬', label: 'Model' },
+    ],
+  },
 ]
 
 export default function Navbar() {
@@ -24,17 +42,21 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className="nav-section">
-        <div className="nav-section-label">Navigation</div>
-        {links.map(({ to, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
-          >
-            <span className="nav-icon-wrap">{icon}</span>
-            <span>{label}</span>
-          </NavLink>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+        {groups.map(({ label, links }) => (
+          <div key={label} className="nav-section">
+            <div className="nav-section-label">{label}</div>
+            {links.map(({ to, icon, lbl, label: lLabel }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+              >
+                <span className="nav-icon-wrap">{icon}</span>
+                <span>{lLabel}</span>
+              </NavLink>
+            ))}
+          </div>
         ))}
       </div>
 
