@@ -9,6 +9,7 @@ import ModelInsights from './pages/ModelInsights'
 import Compare from './pages/Compare'
 import Forecast from './pages/Forecast'
 import Districts from './pages/Districts'
+import Recommend from './pages/Recommend'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/compare" element={<Compare />} />
             <Route path="/forecast" element={<Forecast />} />
             <Route path="/predict" element={<Predict />} />
+            <Route path="/recommend" element={<Recommend />} />
             <Route path="/model" element={<ModelInsights />} />
           </Routes>
         </main>

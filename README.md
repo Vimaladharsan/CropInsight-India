@@ -48,8 +48,9 @@ The application has 8 views, each addressing a different angle of the data:
 | **Map** | India choropleth map coloured by state production, hover tooltips, zoom and pan |
 | **Districts** | Drill into any state — top producing districts, top crops, historical trend |
 | **Compare** | Head-to-head: any crop vs crop or state vs state across all metrics |
-| **Forecast** | Linear trend projection with 95% confidence interval, up to 10-year horizon |
-| **Predict** | Random Forest model inference — input farm parameters, get production estimate |
+| **Forecast** | ARIMA time-series forecast with 95% confidence interval, up to 10-year horizon |
+| **Predict** | Random Forest model inference — input farm parameters, get production estimate + SHAP feature contributions |
+| **Recommend** | Crop Recommender — enter state, season and area to get the top crops ranked by predicted yield |
 | **Model** | Feature importance, R²/RMSE/MAE, model comparison with Linear Regression baseline |
 
 ---

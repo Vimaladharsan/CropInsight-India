@@ -7,7 +7,19 @@ import joblib
 import json
 from schemas import PredictRequest
 
-app = FastAPI(title="CropInsight India API", version="2.0.0")
+try:
+    import shap as shap_lib
+    SHAP_AVAILABLE = True
+except ImportError:
+    SHAP_AVAILABLE = False
+
+try:
+    from statsmodels.tsa.arima.model import ARIMA
+    ARIMA_AVAILABLE = True
+except ImportError:
+    ARIMA_AVAILABLE = False
+
+app = FastAPI(title="CropInsight India API", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,11 +35,14 @@ ENCODER_PATH = Path("../model/encoders.pkl")
 df: pd.DataFrame = None
 model = None
 encoders: dict = None
+shap_explainer = None
+
+FEATURE_NAMES = ["Area", "Year", "Season", "State", "Crop"]
 
 
 @app.on_event("startup")
 def load_resources():
-    global df, model, encoders
+    global df, model, encoders, shap_explainer
     if DATA_PATH.exists():
         raw = pd.read_csv(DATA_PATH)
         raw = raw.dropna(subset=["Production"])
@@ -37,13 +52,24 @@ def load_resources():
         df = raw
     if MODEL_PATH.exists():
         model = joblib.load(MODEL_PATH)
+        if SHAP_AVAILABLE:
+            try:
+                shap_explainer = shap_lib.TreeExplainer(model)
+            except Exception:
+                shap_explainer = None
     if ENCODER_PATH.exists():
         encoders = joblib.load(ENCODER_PATH)
 
 
 @app.get("/")
 def root():
-    return {"status": "ok", "dataset_loaded": df is not None, "model_loaded": model is not None}
+    return {
+        "status": "ok",
+        "dataset_loaded": df is not None,
+        "model_loaded": model is not None,
+        "shap_available": SHAP_AVAILABLE and shap_explainer is not None,
+        "arima_available": ARIMA_AVAILABLE,
+    }
 
 
 # ── Overview ──────────────────────────────────────────────────────────────────
@@ -276,7 +302,7 @@ def compare(type: str = "crop", a: str = "Rice", b: str = "Wheat"):
         return {"type": "state", "a": state_stats(a), "b": state_stats(b)}
 
 
-# ── Forecast ──────────────────────────────────────────────────────────────────
+# ── Forecast (ARIMA) ──────────────────────────────────────────────────────────
 
 @app.get("/api/forecast")
 def forecast(crop: str = "Rice", horizon: int = 5):
@@ -285,29 +311,75 @@ def forecast(crop: str = "Rice", horizon: int = 5):
     filtered = df[df["Crop"] == crop]
     if filtered.empty:
         raise HTTPException(404, f"Crop '{crop}' not found")
+
     yearly = filtered.groupby("Crop_Year")["Production"].sum().reset_index()
     years = yearly["Crop_Year"].values.astype(float)
     prod = yearly["Production"].values.astype(float)
-    coeffs = np.polyfit(years, prod, 1)
     max_year = int(years.max())
     forecast_years = list(range(max_year + 1, max_year + horizon + 1))
-    forecast_prod = [max(0.0, float(np.polyval(coeffs, y))) for y in forecast_years]
-    ci = float(np.std(prod - np.polyval(coeffs, years)) * 1.96)
-    historical = [{"year": int(r["Crop_Year"]), "production": float(r["Production"]), "type": "historical"} for _, r in yearly.iterrows()]
-    future = [{"year": y, "production": round(p, 2), "ci_lower": round(max(0.0, p - ci), 2), "ci_upper": round(p + ci, 2), "type": "forecast"} for y, p in zip(forecast_years, forecast_prod)]
-    trend_pct = round((coeffs[0] / prod.mean()) * 100, 2) if prod.mean() > 0 else 0
+
+    model_name = "OLS"
+    forecast_prod = []
+    ci_lower_list = []
+    ci_upper_list = []
+
+    if ARIMA_AVAILABLE and len(prod) >= 5:
+        try:
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                arima_mdl = ARIMA(prod, order=(1, 1, 0))
+                fitted = arima_mdl.fit()
+                fc = fitted.get_forecast(steps=horizon)
+                mean_fc = fc.predicted_mean
+                ci_df = fc.conf_int(alpha=0.05)
+                forecast_prod = [max(0.0, float(v)) for v in mean_fc]
+                ci_lower_list = [max(0.0, float(v)) for v in ci_df.iloc[:, 0]]
+                ci_upper_list = [max(0.0, float(v)) for v in ci_df.iloc[:, 1]]
+                model_name = "ARIMA(1,1,0)"
+        except Exception:
+            pass
+
+    if not forecast_prod:
+        coeffs = np.polyfit(years, prod, 1)
+        forecast_prod = [max(0.0, float(np.polyval(coeffs, y))) for y in forecast_years]
+        residual_std = float(np.std(prod - np.polyval(coeffs, years)))
+        ci = residual_std * 1.96
+        ci_lower_list = [max(0.0, p - ci) for p in forecast_prod]
+        ci_upper_list = [p + ci for p in forecast_prod]
+        model_name = "OLS"
+
+    # derive slope from first + last forecast vs historical range
+    slope = (forecast_prod[-1] - prod[-1]) / horizon if horizon > 0 else 0.0
+    trend_pct = round((slope / prod.mean()) * 100, 2) if prod.mean() > 0 else 0.0
+
+    historical = [
+        {"year": int(r["Crop_Year"]), "production": float(r["Production"]), "type": "historical"}
+        for _, r in yearly.iterrows()
+    ]
+    future = [
+        {
+            "year": y,
+            "production": round(p, 2),
+            "ci_lower": round(cl, 2),
+            "ci_upper": round(cu, 2),
+            "type": "forecast",
+        }
+        for y, p, cl, cu in zip(forecast_years, forecast_prod, ci_lower_list, ci_upper_list)
+    ]
+
     return {
         "crop": crop,
         "historical": historical,
         "forecast": future,
         "trend_pct_per_year": trend_pct,
-        "slope": round(float(coeffs[0]), 2),
-        "direction": "growing" if coeffs[0] > 0 else "declining",
-        "ci_band": round(ci, 2),
+        "slope": round(float(slope), 2),
+        "direction": "growing" if slope > 0 else "declining",
+        "model": model_name,
     }
 
 
-# ── Predict ───────────────────────────────────────────────────────────────────
+# ── Predict + SHAP ────────────────────────────────────────────────────────────
 
 @app.get("/api/options")
 def options():
@@ -325,8 +397,10 @@ def model_insights():
     if model is None:
         return {"trained": False}
     fi = model.feature_importances_
-    feature_names = ["Area", "Year", "Season", "State", "Crop"]
-    importances = [{"feature": n, "importance": round(float(v), 6)} for n, v in sorted(zip(feature_names, fi), key=lambda x: -x[1])]
+    importances = [
+        {"feature": n, "importance": round(float(v), 6)}
+        for n, v in sorted(zip(FEATURE_NAMES, fi), key=lambda x: -x[1])
+    ]
     result = {
         "trained": True,
         "feature_importances": importances,
@@ -351,11 +425,100 @@ def predict(req: PredictRequest):
         X = [[req.area, req.year, season_enc, state_enc, crop_enc]]
         log_pred = model.predict(X)[0]
         production = float(np.expm1(log_pred))
+
+        shap_values = None
+        if shap_explainer is not None:
+            try:
+                sv = shap_explainer.shap_values(X)
+                raw = sv[0] if hasattr(sv[0], '__len__') else sv
+                total_abs = sum(abs(v) for v in raw) or 1.0
+                shap_values = [
+                    {
+                        "feature": name,
+                        "shap": round(float(v), 6),
+                        "pct": round(abs(float(v)) / total_abs * 100, 1),
+                        "direction": "positive" if v >= 0 else "negative",
+                    }
+                    for name, v in sorted(zip(FEATURE_NAMES, raw), key=lambda x: -abs(x[1]))
+                ]
+            except Exception:
+                shap_values = None
+
         return {
             "predicted_production": round(production, 2),
             "predicted_yield": round(production / req.area, 4),
             "unit": "tonnes",
             "inputs": req.dict(),
+            "shap_values": shap_values,
         }
     except ValueError as e:
         raise HTTPException(400, f"Encoding error: {e}. Check state/season/crop names match the dataset.")
+
+
+# ── Recommend ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/recommend")
+def recommend(state: str, season: str, area: float = 1000.0, year: int = 2015, top_n: int = 5):
+    if model is None or encoders is None:
+        raise HTTPException(503, "Model not trained yet. Run the Jupyter notebook first.")
+    if df is None:
+        raise HTTPException(503, "Dataset not loaded")
+
+    season_stripped = season.strip()
+    valid_crops = df[
+        (df["State_Name"] == state) & (df["Season"] == season_stripped)
+    ]["Crop"].unique().tolist()
+
+    if not valid_crops:
+        valid_crops = df[df["State_Name"] == state]["Crop"].unique().tolist()
+
+    if not valid_crops:
+        raise HTTPException(404, f"No crops found for state '{state}'")
+
+    try:
+        state_enc = encoders["state"].transform([state])[0]
+        season_enc = encoders["season"].transform([season_stripped])[0]
+    except ValueError as e:
+        raise HTTPException(400, f"Encoding error: {e}")
+
+    results = []
+    for crop in valid_crops:
+        try:
+            crop_enc = encoders["crop"].transform([crop])[0]
+            X = [[area, year, season_enc, state_enc, crop_enc]]
+            log_pred = model.predict(X)[0]
+            production = float(np.expm1(log_pred))
+            yield_val = production / area
+            # get historical avg yield for this crop+state+season for context
+            hist = df[
+                (df["Crop"] == crop) & (df["State_Name"] == state) & (df["Season"] == season_stripped)
+            ]
+            hist_yield = round(float(hist["Yield"].mean()), 4) if not hist.empty else None
+            results.append({
+                "crop": crop,
+                "predicted_production": round(production, 2),
+                "predicted_yield": round(yield_val, 4),
+                "historical_avg_yield": hist_yield,
+                "records_in_dataset": len(hist),
+            })
+        except Exception:
+            continue
+
+    results.sort(key=lambda x: -x["predicted_yield"])
+    top = results[:top_n]
+
+    # add rank and relative score
+    if top:
+        max_yield = top[0]["predicted_yield"] or 1.0
+        for i, r in enumerate(top):
+            r["rank"] = i + 1
+            r["score_pct"] = round(r["predicted_yield"] / max_yield * 100, 1)
+
+    return {
+        "state": state,
+        "season": season_stripped,
+        "area": area,
+        "year": year,
+        "recommendations": top,
+        "crops_evaluated": len(results),
+    }

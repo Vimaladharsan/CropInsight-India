@@ -67,7 +67,7 @@ export default function Forecast() {
       <div className="page-header">
         <div className="page-header-left">
           <h2>Production Forecast</h2>
-          <p>Linear trend projection with 95% confidence interval — based on 1997–2015 historical data</p>
+          <p>ARIMA time-series forecast with 95% confidence interval — based on 1997–2015 historical data</p>
         </div>
         {result && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -157,7 +157,7 @@ export default function Forecast() {
             </ResponsiveContainer>
             <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: 'var(--text-muted)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 16, height: 3, background: '#22c55e', display: 'inline-block', borderRadius: 2 }} /> Historical</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 16, height: 3, background: '#a855f7', display: 'inline-block', borderRadius: 2, opacity: 0.7 }} /> Forecast (linear trend)</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 16, height: 3, background: '#a855f7', display: 'inline-block', borderRadius: 2, opacity: 0.7 }} /> Forecast ({result?.model || 'ARIMA'})</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 16, height: 8, background: 'rgba(168,85,247,0.15)', display: 'inline-block', borderRadius: 2 }} /> 95% Confidence Interval</span>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function Forecast() {
           </div>
 
           <div className="info-banner">
-            Forecast uses ordinary least-squares linear regression on annual production data. Confidence intervals assume normally distributed residuals (±1.96σ). For non-linear crops, treat projections as directional indicators only.
+            Forecast uses ARIMA(1,1,0) time-series modelling when available, falling back to OLS linear regression. Confidence intervals are derived from the model's fitted covariance. For high-variance crops, treat projections as directional indicators.{result?.model ? ` Model used: ${result.model}.` : ''}
           </div>
         </div>
       )}

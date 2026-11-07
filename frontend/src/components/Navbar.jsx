@@ -21,8 +21,9 @@ const groups = [
   {
     label: 'ML',
     links: [
-      { to: '/predict', icon: '◎', label: 'Predict' },
-      { to: '/model',   icon: '◬', label: 'Model' },
+      { to: '/predict',   icon: '◎', label: 'Predict' },
+      { to: '/recommend', icon: '✦', label: 'Recommend' },
+      { to: '/model',     icon: '◬', label: 'Model' },
     ],
   },
 ]

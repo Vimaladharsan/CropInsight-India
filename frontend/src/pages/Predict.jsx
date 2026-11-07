@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import { getOptions, predict } from '../api'
 
 const MAX_PROD = 50000000
@@ -169,6 +170,43 @@ export default function Predict() {
           )}
         </div>
       </div>
+
+      {result?.shap_values && (
+        <div className="fade-in" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '1.25rem', marginTop: 16, boxShadow: 'var(--shadow-sm)' }}>
+          <div className="chart-title" style={{ marginBottom: 4 }}>Feature Contributions (SHAP)</div>
+          <div className="chart-sub" style={{ marginBottom: 16 }}>
+            How each input feature pushed the prediction up ↑ or down ↓ from the baseline
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={result.shap_values} layout="vertical" margin={{ top: 0, right: 60, left: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+              <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => v.toFixed(3)} />
+              <YAxis type="category" dataKey="feature" tick={{ fill: 'var(--text)', fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} width={60} />
+              <ReferenceLine x={0} stroke="var(--border-strong)" strokeWidth={1.5} />
+              <Tooltip
+                formatter={(v, name, props) => [
+                  `${v >= 0 ? '+' : ''}${v.toFixed(4)} (${props.payload.pct}%)`,
+                  'SHAP contribution'
+                ]}
+                contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+              />
+              <Bar dataKey="shap" radius={[0, 4, 4, 0]}>
+                {result.shap_values.map((entry, i) => (
+                  <Cell key={i} fill={entry.direction === 'positive' ? '#22c55e' : '#ef4444'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: 'var(--text-muted)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 12, height: 12, background: '#22c55e', display: 'inline-block', borderRadius: 2 }} /> Increases prediction
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 12, height: 12, background: '#ef4444', display: 'inline-block', borderRadius: 2 }} /> Decreases prediction
+            </span>
+          </div>
+        </div>
+      )}
     </>
   )
 }
