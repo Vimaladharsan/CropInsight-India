@@ -19,6 +19,12 @@ try:
 except ImportError:
     ARIMA_AVAILABLE = False
 
+try:
+    from scipy.stats import pearsonr
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
+
 app = FastAPI(title="CropInsight India API", version="3.0.0")
 
 app.add_middleware(
@@ -521,4 +527,167 @@ def recommend(state: str, season: str, area: float = 1000.0, year: int = 2015, t
         "year": year,
         "recommendations": top,
         "crops_evaluated": len(results),
+    }
+
+
+# ── Rainfall Correlation ──────────────────────────────────────────────────────
+
+RAINFALL_PATH = Path("../data/rainfall_in_india_1901-2015.csv")
+
+# Meteorological subdivision → state name in crop dataset
+SUBDIVISION_MAP = {
+    "COASTAL ANDHRA PRADESH": "Andhra Pradesh",
+    "RAYALASEEMA": "Andhra Pradesh",
+    "TELANGANA": "Andhra Pradesh",
+    "ANDHRA PRADESH": "Andhra Pradesh",
+    "ARUNACHAL PRADESH": "Arunachal Pradesh",
+    "ASSAM & MEGHALAYA": "Assam",
+    "BIHAR": "Bihar",
+    "CHHATTISGARH": "Chhattisgarh",
+    "GUJARAT REGION": "Gujarat",
+    "SAURASHTRA KUTCH & DIU": "Gujarat",
+    "HARYANA DELHI & CHANDIGARH": "Haryana",
+    "HIMACHAL PRADESH": "Himachal Pradesh",
+    "JAMMU & KASHMIR": "Jammu and Kashmir",
+    "JHARKHAND": "Jharkhand",
+    "COASTAL KARNATAKA": "Karnataka",
+    "NORTH INTERIOR KARNATAKA": "Karnataka",
+    "SOUTH INTERIOR KARNATAKA": "Karnataka",
+    "INTERIOR KARNATAKA": "Karnataka",
+    "KERALA": "Kerala",
+    "KONKAN & GOA": "Goa",
+    "EAST MADHYA PRADESH": "Madhya Pradesh",
+    "WEST MADHYA PRADESH": "Madhya Pradesh",
+    "MADHYA MAHARASHTRA": "Maharashtra",
+    "MARATHWADA": "Maharashtra",
+    "VIDARBHA": "Maharashtra",
+    "NAGA MANI MIZO TRIPURA": "Manipur",
+    "ORISSA": "Odisha",
+    "PUNJAB": "Punjab",
+    "EAST RAJASTHAN": "Rajasthan",
+    "WEST RAJASTHAN": "Rajasthan",
+    "GANGETIC WEST BENGAL": "West Bengal",
+    "SUBHIMALAYAN BENGAL & SIKKIM": "West Bengal",
+    "SHBS": "West Bengal",
+    "SUB HIMALAYAN BENGAL AND SIKKIM": "West Bengal",
+    "TAMIL NADU": "Tamil Nadu",
+    "UTTARAKHAND": "Uttarakhand",
+    "EAST UTTAR PRADESH": "Uttar Pradesh",
+    "WEST UTTAR PRADESH": "Uttar Pradesh",
+}
+
+
+def _load_rainfall():
+    if not RAINFALL_PATH.exists():
+        return None
+    rain = pd.read_csv(RAINFALL_PATH)
+    rain.columns = [c.strip().upper() for c in rain.columns]
+    rain = rain.rename(columns={"SUBDIVISION": "SUBDIVISION"})
+    rain["SUBDIVISION"] = rain["SUBDIVISION"].str.strip().str.upper()
+    rain["State"] = rain["SUBDIVISION"].map(SUBDIVISION_MAP)
+    rain = rain.dropna(subset=["State"])
+    monsoon_cols = [c for c in ["JUN", "JUL", "AUG", "SEP"] if c in rain.columns]
+    if monsoon_cols:
+        rain["MONSOON"] = rain[monsoon_cols].sum(axis=1)
+    if "ANNUAL" not in rain.columns and all(m in rain.columns for m in ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]):
+        rain["ANNUAL"] = rain[["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]].sum(axis=1)
+    keep = ["State", "YEAR", "ANNUAL"] + (["MONSOON"] if "MONSOON" in rain.columns else [])
+    rain = rain[[c for c in keep if c in rain.columns]]
+    # average across subdivisions that map to same state+year
+    rain = rain.groupby(["State", "YEAR"]).mean(numeric_only=True).reset_index()
+    return rain
+
+
+@app.get("/api/rainfall")
+def rainfall_correlation():
+    if df is None:
+        raise HTTPException(503, "Dataset not loaded")
+
+    rain = _load_rainfall()
+    if rain is None:
+        return {
+            "available": False,
+            "message": "Rainfall data not found. Download 'rainfall in india 1901-2015.csv' from Kaggle and place it in the data/ folder.",
+        }
+
+    # crop yield per state+year
+    crop_yearly = (
+        df.groupby(["State_Name", "Crop_Year"])
+        .agg(avg_yield=("Yield", "mean"), total_production=("Production", "sum"), total_area=("Area", "sum"))
+        .reset_index()
+        .rename(columns={"State_Name": "State", "Crop_Year": "YEAR"})
+    )
+
+    merged = pd.merge(crop_yearly, rain, on=["State", "YEAR"])
+    merged = merged[(merged["YEAR"] >= 1997) & (merged["YEAR"] <= 2015)]
+
+    if merged.empty:
+        return {"available": False, "message": "No overlapping state+year pairs found after merging. Check state name mapping."}
+
+    has_monsoon = "MONSOON" in merged.columns
+
+    # overall Pearson r
+    annual_r, annual_p = (None, None)
+    monsoon_r, monsoon_p = (None, None)
+    if SCIPY_AVAILABLE and len(merged) >= 3:
+        annual_r, annual_p = pearsonr(merged["ANNUAL"].fillna(0), merged["avg_yield"])
+        annual_r = round(float(annual_r), 4)
+        annual_p = round(float(annual_p), 6)
+        if has_monsoon:
+            monsoon_r, monsoon_p = pearsonr(merged["MONSOON"].fillna(0), merged["avg_yield"])
+            monsoon_r = round(float(monsoon_r), 4)
+            monsoon_p = round(float(monsoon_p), 6)
+
+    # state-level aggregates for scatter
+    state_agg = (
+        merged.groupby("State")
+        .agg(avg_yield=("avg_yield", "mean"), avg_rainfall=("ANNUAL", "mean"),
+             avg_monsoon=("MONSOON", "mean") if has_monsoon else ("ANNUAL", "mean"))
+        .reset_index()
+    )
+
+    # per-state correlation across years
+    state_corr = []
+    for state_name, grp in merged.groupby("State"):
+        if len(grp) < 4:
+            continue
+        try:
+            if SCIPY_AVAILABLE:
+                r, p = pearsonr(grp["ANNUAL"].fillna(0), grp["avg_yield"])
+                state_corr.append({
+                    "state": state_name,
+                    "pearson_r": round(float(r), 4),
+                    "p_value": round(float(p), 6),
+                    "years": len(grp),
+                    "avg_yield": round(float(grp["avg_yield"].mean()), 4),
+                    "avg_rainfall": round(float(grp["ANNUAL"].mean()), 1),
+                })
+        except Exception:
+            continue
+
+    state_corr.sort(key=lambda x: -x["pearson_r"])
+
+    # national yearly avg
+    yearly = (
+        merged.groupby("YEAR")
+        .agg(avg_yield=("avg_yield", "mean"), avg_rainfall=("ANNUAL", "mean"),
+             avg_monsoon=("MONSOON", "mean") if has_monsoon else ("ANNUAL", "mean"))
+        .reset_index()
+        .rename(columns={"YEAR": "year"})
+        .round(3)
+    )
+
+    scatter = state_agg.round(4).to_dict(orient="records")
+
+    return {
+        "available": True,
+        "pearson_r_annual": annual_r,
+        "p_value_annual": annual_p,
+        "pearson_r_monsoon": monsoon_r if has_monsoon else None,
+        "p_value_monsoon": monsoon_p if has_monsoon else None,
+        "scatter": scatter,
+        "state_correlations": state_corr,
+        "yearly": yearly.to_dict(orient="records"),
+        "pairs_count": len(merged),
+        "states_count": int(merged["State"].nunique()),
     }

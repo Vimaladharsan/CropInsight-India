@@ -19,3 +19,4 @@ export const predict = (payload) => api.post('/predict', payload).then(r => r.da
 export const getModelInsights = () => api.get('/model-insights').then(r => r.data)
 export const getRecommend = (state, season, area, year = 2015, topN = 5) =>
   api.get(`/recommend?state=${encodeURIComponent(state)}&season=${encodeURIComponent(season)}&area=${area}&year=${year}&top_n=${topN}`).then(r => r.data)
+export const getRainfall = () => api.get('/rainfall').then(r => r.data)

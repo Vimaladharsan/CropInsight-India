@@ -47,6 +47,7 @@ The application has 8 views, each addressing a different angle of the data:
 | **Explore** | Deep EDA — yield trends, area cultivated, season analysis, insight badges |
 | **Map** | India choropleth map coloured by state production, hover tooltips, zoom and pan |
 | **Districts** | Drill into any state — top producing districts, top crops, historical trend |
+| **Rainfall** | Pearson correlation between IMD rainfall and crop yield — scatter, yearly dual-axis trend, per-state correlation leaderboard |
 | **Compare** | Head-to-head: any crop vs crop or state vs state across all metrics |
 | **Forecast** | ARIMA time-series forecast with 95% confidence interval, up to 10-year horizon |
 | **Predict** | Random Forest model inference — input farm parameters, get production estimate + SHAP feature contributions |
@@ -89,11 +90,15 @@ CropInsight-India/
 
 ---
 
-## Dataset
+## Datasets
 
-**Indian Agriculture Crop Production** — Kaggle  
+**1. Indian Agriculture Crop Production** — Kaggle  
 Search: `Indian Agriculture Crop Production abhinand`  
-Download `crop_production.csv` and place it in the `data/` folder.
+Download `crop_production.csv` → place in `data/`
+
+**2. Rainfall in India 1901–2015** — Kaggle *(required for Rainfall page)*  
+Search: `rainfall in india 1901 2015`  
+Download `rainfall in india 1901-2015.csv` → rename to `rainfall_in_india_1901-2015.csv` → place in `data/`
 
 ---
 

@@ -9,6 +9,7 @@ const groups = [
       { to: '/eda',       icon: '◈', label: 'Explore' },
       { to: '/map',       icon: '◉', label: 'Map' },
       { to: '/districts', icon: '⊞', label: 'Districts' },
+      { to: '/rainfall',  icon: '🌧', label: 'Rainfall' },
     ],
   },
   {
