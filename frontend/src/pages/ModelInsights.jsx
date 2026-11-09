@@ -45,7 +45,7 @@ export default function ModelInsights() {
       <div className="page-header">
         <div className="page-header-left">
           <h2>Model Insights</h2>
-          <p>Random Forest performance, feature importance, and comparison with baseline</p>
+          <p>XGBoost, Random Forest, and Linear Regression — performance, feature importance, and 3-model comparison</p>
         </div>
         <div style={{
           padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
@@ -83,35 +83,63 @@ export default function ModelInsights() {
 
       {data && data.trained && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Random Forest Performance</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              <MetricCard label="R² Score" value={data.rf?.r2?.toFixed(4)} sub="Variance explained" accent="#22c55e" />
-              <MetricCard label="RMSE" value={data.rf?.rmse?.toLocaleString(undefined, { maximumFractionDigits: 0 })} sub="Root mean squared error" accent="#3b82f6" />
-              <MetricCard label="MAE" value={data.rf?.mae?.toLocaleString(undefined, { maximumFractionDigits: 0 })} sub="Mean absolute error" accent="#a855f7" />
-              <MetricCard label="Trees" value={data.rf?.n_estimators ?? 100} sub="Estimators in forest" accent="#f59e0b" />
-            </div>
-          </div>
+          {(() => {
+            const best = data.xgb ? (data.xgb.r2 >= data.rf.r2 ? 'xgb' : 'rf') : 'rf'
+            const bestLabel = best === 'xgb' ? 'XGBoost' : 'Random Forest'
+            const bestData = best === 'xgb' ? data.xgb : data.rf
+            return (
+              <div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Best Model — {bestLabel}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  <MetricCard label="R² Score" value={bestData?.r2?.toFixed(4)} sub="Variance explained" accent="#22c55e" />
+                  <MetricCard label="RMSE" value={bestData?.rmse?.toLocaleString(undefined, { maximumFractionDigits: 0 })} sub="Root mean squared error" accent="#3b82f6" />
+                  <MetricCard label="MAE" value={bestData?.mae?.toLocaleString(undefined, { maximumFractionDigits: 0 })} sub="Mean absolute error" accent="#a855f7" />
+                  <MetricCard label="Trees" value={bestData?.n_estimators ?? 300} sub="Estimators" accent="#f59e0b" />
+                </div>
+              </div>
+            )
+          })()}
 
           {data.lr && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '1.25rem', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Model Comparison</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 }}>
-                {[['', 'R²', 'RMSE', 'MAE'], ['Linear Regression', data.lr.r2?.toFixed(4), data.lr.rmse?.toFixed(0), data.lr.mae?.toFixed(0)], ['Random Forest', data.rf.r2?.toFixed(4), data.rf.rmse?.toFixed(0), data.rf.mae?.toFixed(0)]].map((row, ri) =>
-                  row.map((cell, ci) => (
-                    <div key={`${ri}-${ci}`} style={{
-                      padding: '8px 12px', fontSize: ri === 0 ? '0.68rem' : '0.85rem',
-                      fontWeight: ri === 0 || ci === 0 ? 700 : 400,
-                      color: ri === 0 ? 'var(--text-muted)' : ri === 2 && ci > 0 ? 'var(--accent)' : 'var(--text-secondary)',
-                      borderBottom: '1px solid var(--border)', borderRight: ci < 3 ? '1px solid var(--border)' : 'none',
-                      textTransform: ri === 0 ? 'uppercase' : 'none', letterSpacing: ri === 0 ? '0.06em' : 'normal',
-                      background: ri === 2 ? 'rgba(34,197,94,0.04)' : 'transparent',
-                    }}>{cell}</div>
-                  ))
-                )}
-              </div>
+              {(() => {
+                const rows = [
+                  ['', 'R²', 'RMSE', 'MAE'],
+                  ['Linear Regression', data.lr.r2?.toFixed(4), data.lr.rmse?.toFixed(0), data.lr.mae?.toFixed(0)],
+                  ['Random Forest', data.rf.r2?.toFixed(4), data.rf.rmse?.toFixed(0), data.rf.mae?.toFixed(0)],
+                  ...(data.xgb ? [['XGBoost', data.xgb.r2?.toFixed(4), data.xgb.rmse?.toFixed(0), data.xgb.mae?.toFixed(0)]] : []),
+                ]
+                const bestR2 = Math.max(
+                  data.lr?.r2 ?? 0,
+                  data.rf?.r2 ?? 0,
+                  data.xgb?.r2 ?? 0,
+                )
+                const bestIdx = rows.findIndex((r, i) => i > 0 && parseFloat(r[1]) === bestR2)
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 }}>
+                    {rows.map((row, ri) =>
+                      row.map((cell, ci) => (
+                        <div key={`${ri}-${ci}`} style={{
+                          padding: '8px 12px', fontSize: ri === 0 ? '0.68rem' : '0.85rem',
+                          fontWeight: ri === 0 || ci === 0 ? 700 : 400,
+                          color: ri === 0 ? 'var(--text-muted)' : ri === bestIdx && ci > 0 ? '#f59e0b' : ri > 0 && ci === 0 && ri === bestIdx ? 'var(--accent)' : 'var(--text-secondary)',
+                          borderBottom: ri < rows.length - 1 ? '1px solid var(--border)' : 'none',
+                          borderRight: ci < 3 ? '1px solid var(--border)' : 'none',
+                          textTransform: ri === 0 ? 'uppercase' : 'none', letterSpacing: ri === 0 ? '0.06em' : 'normal',
+                          background: ri === bestIdx ? 'rgba(245,158,11,0.06)' : 'transparent',
+                          position: 'relative',
+                        }}>
+                          {cell}
+                          {ri === bestIdx && ci === 0 && <span style={{ marginLeft: 6, fontSize: '0.65rem', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>BEST</span>}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )
+              })()}
               <div style={{ marginTop: 10, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Random Forest outperforms Linear Regression on this non-linear agricultural dataset. Target was log-transformed (np.log1p) before training.
+                {data.xgb ? 'XGBoost, Random Forest, and Linear Regression compared. Target was log-transformed (np.log1p) before training.' : 'Random Forest vs Linear Regression. Target was log-transformed (np.log1p) before training.'}
               </div>
             </div>
           )}
@@ -139,7 +167,7 @@ export default function ModelInsights() {
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '1.25rem', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Model Architecture</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: '0.85rem' }}>
-              {[['Algorithm', 'Random Forest Regressor'], ['Target transform', 'np.log1p(Production)'], ['Encoding', 'LabelEncoder (State, Season, Crop)'], ['Features', 'Area, Year, Season, State, Crop'], ['Train/Test split', '80 / 20'], ['Evaluation metric', 'R², RMSE, MAE']].map(([k, v]) => (
+              {[['Algorithms', 'XGBoost · Random Forest · Linear Regression'], ['Target transform', 'np.log1p(Production)'], ['Encoding', 'LabelEncoder (State, Season, Crop)'], ['Features', 'Area, Year, Season, State, Crop'], ['Train/Test split', '80 / 20'], ['Evaluation metric', 'R², RMSE, MAE']].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase' }}>{k}</span>
                   <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{v}</span>

@@ -52,7 +52,7 @@ The application has 8 views, each addressing a different angle of the data:
 | **Forecast** | ARIMA time-series forecast with 95% confidence interval, up to 10-year horizon |
 | **Predict** | Random Forest model inference — input farm parameters, get production estimate + SHAP feature contributions |
 | **Recommend** | Crop Recommender — enter state, season and area to get the top crops ranked by predicted yield |
-| **Model** | Feature importance, R²/RMSE/MAE, model comparison with Linear Regression baseline |
+| **Model** | Feature importance, R²/RMSE/MAE, 3-model comparison — XGBoost vs Random Forest vs Linear Regression |
 
 ---
 
@@ -60,7 +60,7 @@ The application has 8 views, each addressing a different angle of the data:
 
 | Layer | Tech |
 |---|---|
-| Data Analysis | Python · pandas · NumPy · SciPy · scikit-learn |
+| Data Analysis | Python · pandas · NumPy · SciPy · scikit-learn · XGBoost |
 | Notebook | Jupyter |
 | Backend API | FastAPI · uvicorn · joblib |
 | Frontend | React 18 · Vite · Recharts · react-simple-maps |
@@ -118,7 +118,7 @@ python -m uvicorn main:app --reload --port 8001
 jupyter notebook notebooks/CropInsight_Analysis.ipynb
 ```
 
-Run all cells — saves `rf_model.pkl`, `encoders.pkl`, and `metrics.json` into `model/`.
+Run all cells — saves `rf_model.pkl`, `xgb_model.pkl`, `encoders.pkl`, and `metrics.json` into `model/`.
 
 ### 3. Frontend
 

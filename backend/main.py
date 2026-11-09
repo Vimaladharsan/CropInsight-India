@@ -37,18 +37,20 @@ app.add_middleware(
 DATA_PATH = Path("../data/crop_production.csv")
 MODEL_PATH = Path("../model/rf_model.pkl")
 ENCODER_PATH = Path("../model/encoders.pkl")
+XGB_MODEL_PATH = Path("../model/xgb_model.pkl")
 
 df: pd.DataFrame = None
 model = None
 encoders: dict = None
 shap_explainer = None
+xgb_model = None
 
 FEATURE_NAMES = ["Area", "Year", "Season", "State", "Crop"]
 
 
 @app.on_event("startup")
 def load_resources():
-    global df, model, encoders, shap_explainer
+    global df, model, encoders, shap_explainer, xgb_model
     if DATA_PATH.exists():
         raw = pd.read_csv(DATA_PATH)
         raw = raw.dropna(subset=["Production"])
@@ -65,6 +67,11 @@ def load_resources():
                 shap_explainer = None
     if ENCODER_PATH.exists():
         encoders = joblib.load(ENCODER_PATH)
+    if XGB_MODEL_PATH.exists():
+        try:
+            xgb_model = joblib.load(XGB_MODEL_PATH)
+        except Exception:
+            xgb_model = None
 
 
 @app.get("/")
@@ -411,12 +418,17 @@ def model_insights():
         "trained": True,
         "feature_importances": importances,
         "rf": {"n_estimators": model.n_estimators},
+        "xgb_loaded": xgb_model is not None,
     }
     model_meta_path = Path("../model/metrics.json")
     if model_meta_path.exists():
         metrics = json.loads(model_meta_path.read_text())
         result["rf"].update(metrics.get("rf", {}))
         result["lr"] = metrics.get("lr")
+        if "xgb" in metrics:
+            result["xgb"] = metrics["xgb"]
+            if xgb_model is not None:
+                result["xgb"]["n_estimators"] = xgb_model.n_estimators
     return result
 
 
