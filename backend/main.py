@@ -703,3 +703,16 @@ def rainfall_correlation():
         "pairs_count": len(merged),
         "states_count": int(merged["State"].nunique()),
     }
+
+
+# ── Clustering ────────────────────────────────────────────────────────────────
+
+CLUSTERS_PATH = Path("../model/clusters.json")
+
+@app.get("/api/clusters")
+def clusters():
+    if not CLUSTERS_PATH.exists():
+        return {"available": False, "message": "clusters.json not found. Run the Jupyter notebook to generate it."}
+    data = json.loads(CLUSTERS_PATH.read_text())
+    data["available"] = True
+    return data

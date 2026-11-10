@@ -52,6 +52,7 @@ The application has 8 views, each addressing a different angle of the data:
 | **Forecast** | ARIMA time-series forecast with 95% confidence interval, up to 10-year horizon |
 | **Predict** | Random Forest model inference — input farm parameters, get production estimate + SHAP feature contributions |
 | **Recommend** | Crop Recommender — enter state, season and area to get the top crops ranked by predicted yield |
+| **Clusters** | K-Means unsupervised clustering of states by agricultural profile — PCA scatter, cluster profiles, state table |
 | **Model** | Feature importance, R²/RMSE/MAE, 3-model comparison — XGBoost vs Random Forest vs Linear Regression |
 
 ---

@@ -11,6 +11,7 @@ import Forecast from './pages/Forecast'
 import Districts from './pages/Districts'
 import Recommend from './pages/Recommend'
 import Rainfall from './pages/Rainfall'
+import Cluster from './pages/Cluster'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/recommend" element={<Recommend />} />
             <Route path="/rainfall" element={<Rainfall />} />
             <Route path="/model" element={<ModelInsights />} />
+            <Route path="/cluster" element={<Cluster />} />
           </Routes>
         </main>
       </div>

@@ -1,0 +1,456 @@
+{
+  "k": 4,
+  "silhouette": 0.4073,
+  "features_used": [
+    "avg_yield",
+    "total_production",
+    "avg_area",
+    "crop_diversity",
+    "production_std",
+    "year_trend"
+  ],
+  "pca_variance": [
+    0.5537,
+    0.2455
+  ],
+  "states": [
+    {
+      "state": "Andaman and Nicobar Islands",
+      "cluster": 2,
+      "pca_x": 0.3089,
+      "pca_y": 3.2476,
+      "avg_yield": 343.5531,
+      "total_production": 718223240.0,
+      "avg_area": 1677.03,
+      "crop_diversity": 20,
+      "year_trend": -353171.88
+    },
+    {
+      "state": "Andhra Pradesh",
+      "cluster": 3,
+      "pca_x": 3.6243,
+      "pca_y": 0.0,
+      "avg_yield": 195.1386,
+      "total_production": 17324590296.0,
+      "avg_area": 13754.56,
+      "crop_diversity": 68,
+      "year_trend": 98037.57
+    },
+    {
+      "state": "Arunachal Pradesh",
+      "cluster": 0,
+      "pca_x": -2.0223,
+      "pca_y": -0.4689,
+      "avg_yield": 3.6471,
+      "total_production": 6823913.0,
+      "avg_area": 1714.87,
+      "crop_diversity": 16,
+      "year_trend": 77.26
+    },
+    {
+      "state": "Assam",
+      "cluster": 2,
+      "pca_x": 0.8915,
+      "pca_y": 1.8142,
+      "avg_yield": 148.6305,
+      "total_production": 2111751759.0,
+      "avg_area": 4813.21,
+      "crop_diversity": 39,
+      "year_trend": -11128.59
+    },
+    {
+      "state": "Bihar",
+      "cluster": 1,
+      "pca_x": 0.3732,
+      "pca_y": -0.9944,
+      "avg_yield": 3.5098,
+      "total_production": 366483597.0,
+      "avg_area": 6796.1,
+      "crop_diversity": 42,
+      "year_trend": 1019.57
+    },
+    {
+      "state": "Chandigarh",
+      "cluster": 0,
+      "pca_x": -4.1455,
+      "pca_y": 0.5691,
+      "avg_yield": 7.8279,
+      "total_production": 63956.0,
+      "avg_area": 140.47,
+      "crop_diversity": 12,
+      "year_trend": -13.21
+    },
+    {
+      "state": "Chhattisgarh",
+      "cluster": 1,
+      "pca_x": -0.0315,
+      "pca_y": -1.2312,
+      "avg_yield": 2.1796,
+      "total_production": 100951908.0,
+      "avg_area": 7998.78,
+      "crop_diversity": 44,
+      "year_trend": 187.82
+    },
+    {
+      "state": "Dadra and Nagar Haveli",
+      "cluster": 0,
+      "pca_x": -2.2378,
+      "pca_y": 0.526,
+      "avg_yield": 7.5039,
+      "total_production": 1847871.0,
+      "avg_area": 1507.66,
+      "crop_diversity": 21,
+      "year_trend": -439.27
+    },
+    {
+      "state": "Goa",
+      "cluster": 2,
+      "pca_x": 0.4179,
+      "pca_y": 2.8806,
+      "avg_yield": 199.1606,
+      "total_production": 505755758.0,
+      "avg_area": 5824.53,
+      "crop_diversity": 15,
+      "year_trend": -450285.82
+    },
+    {
+      "state": "Gujarat",
+      "cluster": 1,
+      "pca_x": 0.2561,
+      "pca_y": 0.1774,
+      "avg_yield": 5.7167,
+      "total_production": 524291337.0,
+      "avg_area": 18520.76,
+      "crop_diversity": 32,
+      "year_trend": -459.34
+    },
+    {
+      "state": "Haryana",
+      "cluster": 1,
+      "pca_x": 0.8368,
+      "pca_y": -0.9207,
+      "avg_yield": 7.0553,
+      "total_production": 381273890.0,
+      "avg_area": 19716.84,
+      "crop_diversity": 38,
+      "year_trend": 1369.2
+    },
+    {
+      "state": "Himachal Pradesh",
+      "cluster": 0,
+      "pca_x": -1.3203,
+      "pca_y": -0.457,
+      "avg_yield": 1.937,
+      "total_production": 17805169.0,
+      "avg_area": 4073.05,
+      "crop_diversity": 35,
+      "year_trend": -48.8
+    },
+    {
+      "state": "Jammu and Kashmir ",
+      "cluster": 0,
+      "pca_x": -1.2072,
+      "pca_y": -0.5901,
+      "avg_yield": 1.5383,
+      "total_production": 13291016.0,
+      "avg_area": 5676.85,
+      "crop_diversity": 42,
+      "year_trend": -432.82
+    },
+    {
+      "state": "Jharkhand",
+      "cluster": 0,
+      "pca_x": -1.7964,
+      "pca_y": 0.2369,
+      "avg_yield": 2.734,
+      "total_production": 10777742.0,
+      "avg_area": 7417.89,
+      "crop_diversity": 12,
+      "year_trend": -1499.18
+    },
+    {
+      "state": "Karnataka",
+      "cluster": 1,
+      "pca_x": 1.1977,
+      "pca_y": -1.1528,
+      "avg_yield": 4.4312,
+      "total_production": 863429812.0,
+      "avg_area": 9626.1,
+      "crop_diversity": 59,
+      "year_trend": 365.13
+    },
+    {
+      "state": "Kerala",
+      "cluster": 3,
+      "pca_x": 3.632,
+      "pca_y": 1.0488,
+      "avg_yield": 381.2722,
+      "total_production": 97880045376.0,
+      "avg_area": 7944.6,
+      "crop_diversity": 43,
+      "year_trend": 527064.5
+    },
+    {
+      "state": "Madhya Pradesh",
+      "cluster": 1,
+      "pca_x": 0.9145,
+      "pca_y": -1.6968,
+      "avg_yield": 3.0631,
+      "total_production": 448840739.0,
+      "avg_area": 14589.95,
+      "crop_diversity": 62,
+      "year_trend": 428.43
+    },
+    {
+      "state": "Maharashtra",
+      "cluster": 1,
+      "pca_x": 1.2441,
+      "pca_y": -0.9545,
+      "avg_yield": 4.3676,
+      "total_production": 1263640606.0,
+      "avg_area": 25783.13,
+      "crop_diversity": 34,
+      "year_trend": 7982.87
+    },
+    {
+      "state": "Manipur",
+      "cluster": 0,
+      "pca_x": -1.2894,
+      "pca_y": -0.9225,
+      "avg_yield": 4.5993,
+      "total_production": 5230917.0,
+      "avg_area": 1585.51,
+      "crop_diversity": 41,
+      "year_trend": 269.96
+    },
+    {
+      "state": "Meghalaya",
+      "cluster": 0,
+      "pca_x": -1.7023,
+      "pca_y": -0.2627,
+      "avg_yield": 2.956,
+      "total_production": 12112496.0,
+      "avg_area": 1407.4,
+      "crop_diversity": 39,
+      "year_trend": -69.11
+    },
+    {
+      "state": "Mizoram",
+      "cluster": 0,
+      "pca_x": -2.6772,
+      "pca_y": -0.0059,
+      "avg_yield": 2.274,
+      "total_production": 1661540.0,
+      "avg_area": 1041.55,
+      "crop_diversity": 24,
+      "year_trend": -189.8
+    },
+    {
+      "state": "Nagaland",
+      "cluster": 0,
+      "pca_x": -1.4599,
+      "pca_y": -0.5094,
+      "avg_yield": 3.4469,
+      "total_production": 12765950.0,
+      "avg_area": 1550.52,
+      "crop_diversity": 48,
+      "year_trend": -43.48
+    },
+    {
+      "state": "Odisha",
+      "cluster": 1,
+      "pca_x": 0.0127,
+      "pca_y": -1.0691,
+      "avg_yield": 3.7255,
+      "total_production": 160904070.0,
+      "avg_area": 8123.6,
+      "crop_diversity": 39,
+      "year_trend": 467.71
+    },
+    {
+      "state": "Puducherry",
+      "cluster": 2,
+      "pca_x": 0.1061,
+      "pca_y": 3.0074,
+      "avg_yield": 763.5964,
+      "total_production": 384724502.0,
+      "avg_area": 629.28,
+      "crop_diversity": 31,
+      "year_trend": -12115.21
+    },
+    {
+      "state": "Punjab",
+      "cluster": 1,
+      "pca_x": 1.536,
+      "pca_y": 0.5881,
+      "avg_yield": 345.7546,
+      "total_production": 586385001.0,
+      "avg_area": 40316.64,
+      "crop_diversity": 22,
+      "year_trend": 1225.8
+    },
+    {
+      "state": "Rajasthan",
+      "cluster": 1,
+      "pca_x": 0.7545,
+      "pca_y": -1.608,
+      "avg_yield": 2.8415,
+      "total_production": 281320270.0,
+      "avg_area": 22276.5,
+      "crop_diversity": 51,
+      "year_trend": 743.28
+    },
+    {
+      "state": "Sikkim",
+      "cluster": 0,
+      "pca_x": -2.2255,
+      "pca_y": -0.4753,
+      "avg_yield": 1.3061,
+      "total_production": 2435735.0,
+      "avg_area": 2135.12,
+      "crop_diversity": 18,
+      "year_trend": 1.06
+    },
+    {
+      "state": "Tamil Nadu",
+      "cluster": 3,
+      "pca_x": 3.5017,
+      "pca_y": -0.6783,
+      "avg_yield": 65.2876,
+      "total_production": 12076443049.0,
+      "avg_area": 7192.59,
+      "crop_diversity": 84,
+      "year_trend": 250231.57
+    },
+    {
+      "state": "Telangana ",
+      "cluster": 1,
+      "pca_x": 1.8709,
+      "pca_y": -0.5072,
+      "avg_yield": 101.211,
+      "total_production": 335147930.0,
+      "avg_area": 14543.13,
+      "crop_diversity": 65,
+      "year_trend": 869.79
+    },
+    {
+      "state": "Tripura",
+      "cluster": 0,
+      "pca_x": -1.6326,
+      "pca_y": 0.3521,
+      "avg_yield": 4.7405,
+      "total_production": 12522917.0,
+      "avg_area": 3287.26,
+      "crop_diversity": 22,
+      "year_trend": -701.47
+    },
+    {
+      "state": "Uttar Pradesh",
+      "cluster": 1,
+      "pca_x": 0.7572,
+      "pca_y": 0.1711,
+      "avg_yield": 5.2846,
+      "total_production": 3234492663.0,
+      "avg_area": 13065.24,
+      "crop_diversity": 42,
+      "year_trend": -628.43
+    },
+    {
+      "state": "Uttarakhand",
+      "cluster": 0,
+      "pca_x": -0.4509,
+      "pca_y": 0.0885,
+      "avg_yield": 3.3165,
+      "total_production": 132177355.0,
+      "avg_area": 3894.72,
+      "crop_diversity": 39,
+      "year_trend": -205.75
+    },
+    {
+      "state": "West Bengal",
+      "cluster": 1,
+      "pca_x": 1.9627,
+      "pca_y": -0.2029,
+      "avg_yield": 53.3348,
+      "total_production": 1397904390.0,
+      "avg_area": 22444.83,
+      "crop_diversity": 44,
+      "year_trend": 3000.75
+    }
+  ],
+  "profiles": [
+    {
+      "cluster": 0,
+      "states": [
+        "Arunachal Pradesh",
+        "Chandigarh",
+        "Dadra and Nagar Haveli",
+        "Himachal Pradesh",
+        "Jammu and Kashmir ",
+        "Jharkhand",
+        "Manipur",
+        "Meghalaya",
+        "Mizoram",
+        "Nagaland",
+        "Sikkim",
+        "Tripura",
+        "Uttarakhand"
+      ],
+      "avg_yield": 3.679,
+      "total_production": 17655121.0,
+      "avg_area": 2725.61,
+      "crop_diversity": 28.4,
+      "count": 13
+    },
+    {
+      "cluster": 1,
+      "states": [
+        "Bihar",
+        "Chhattisgarh",
+        "Gujarat",
+        "Haryana",
+        "Karnataka",
+        "Madhya Pradesh",
+        "Maharashtra",
+        "Odisha",
+        "Punjab",
+        "Rajasthan",
+        "Telangana ",
+        "Uttar Pradesh",
+        "West Bengal"
+      ],
+      "avg_yield": 41.7289,
+      "total_production": 765005093.0,
+      "avg_area": 17215.51,
+      "crop_diversity": 44.2,
+      "count": 13
+    },
+    {
+      "cluster": 2,
+      "states": [
+        "Andaman and Nicobar Islands",
+        "Assam",
+        "Goa",
+        "Puducherry"
+      ],
+      "avg_yield": 363.7351,
+      "total_production": 930113815.0,
+      "avg_area": 3236.01,
+      "crop_diversity": 26.2,
+      "count": 4
+    },
+    {
+      "cluster": 3,
+      "states": [
+        "Andhra Pradesh",
+        "Kerala",
+        "Tamil Nadu"
+      ],
+      "avg_yield": 213.8995,
+      "total_production": 42427026240.0,
+      "avg_area": 9630.59,
+      "crop_diversity": 65.0,
+      "count": 3
+    }
+  ]
+}
