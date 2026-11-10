@@ -12,6 +12,7 @@ import Districts from './pages/Districts'
 import Recommend from './pages/Recommend'
 import Rainfall from './pages/Rainfall'
 import Cluster from './pages/Cluster'
+import Anomaly from './pages/Anomaly'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/rainfall" element={<Rainfall />} />
             <Route path="/model" element={<ModelInsights />} />
             <Route path="/cluster" element={<Cluster />} />
+            <Route path="/anomaly" element={<Anomaly />} />
           </Routes>
         </main>
       </div>

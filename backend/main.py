@@ -716,3 +716,79 @@ def clusters():
     data = json.loads(CLUSTERS_PATH.read_text())
     data["available"] = True
     return data
+
+
+# ── Anomaly Detection ─────────────────────────────────────────────────────────
+
+@app.get("/api/anomalies")
+def anomalies(threshold: float = 2.0, top_n: int = 300):
+    if df is None:
+        raise HTTPException(503, "Dataset not loaded")
+
+    # Only state+crop pairs with >= 3 years of data produce meaningful z-scores
+    counts = df.groupby(["State_Name", "Crop"])["Crop_Year"].transform("count")
+    df_valid = df[counts >= 3].copy()
+
+    stats = (
+        df_valid.groupby(["State_Name", "Crop"])["Yield"]
+        .agg(mean_yield="mean", std_yield="std")
+        .reset_index()
+    )
+    df_z = df_valid.merge(stats, on=["State_Name", "Crop"])
+    df_z = df_z[df_z["std_yield"] > 0].copy()
+    df_z["z_score"] = (df_z["Yield"] - df_z["mean_yield"]) / df_z["std_yield"]
+
+    anom = df_z[df_z["z_score"].abs() >= threshold].copy()
+    anom["direction"] = anom["z_score"].apply(lambda x: "high" if x > 0 else "low")
+    anom["pct_from_mean"] = ((anom["Yield"] - anom["mean_yield"]) / anom["mean_yield"] * 100).round(1)
+    anom = anom.sort_values("z_score", key=abs, ascending=False)
+
+    top_list = (
+        anom.head(top_n)
+        .rename(columns={"State_Name": "state", "Crop": "crop", "Crop_Year": "year",
+                          "Yield": "yield_val"})
+        [["state", "crop", "year", "yield_val", "mean_yield", "z_score", "direction", "pct_from_mean"]]
+        .round(4)
+        .to_dict(orient="records")
+    )
+
+    # Heatmap: per state+year, the signed z of the highest |z| anomaly
+    def _signed_max(g):
+        idx = g["z_score"].abs().idxmax()
+        return pd.Series({"max_z": round(float(g.loc[idx, "z_score"]), 3), "count": len(g)})
+
+    heatmap = (
+        anom.groupby(["State_Name", "Crop_Year"])
+        .apply(_signed_max, include_groups=False)
+        .reset_index()
+        .rename(columns={"State_Name": "state", "Crop_Year": "year"})
+        .to_dict(orient="records")
+    )
+
+    top_states = (
+        anom.groupby("State_Name").size().nlargest(10)
+        .reset_index().rename(columns={"State_Name": "state", 0: "count"})
+        .to_dict(orient="records")
+    )
+    top_crops = (
+        anom.groupby("Crop").size().nlargest(10)
+        .reset_index().rename(columns={"Crop": "crop", 0: "count"})
+        .to_dict(orient="records")
+    )
+    yearly = (
+        anom.groupby("Crop_Year").size()
+        .reset_index().rename(columns={"Crop_Year": "year", 0: "count"})
+        .sort_values("year").to_dict(orient="records")
+    )
+
+    return {
+        "total_anomalies": len(anom),
+        "threshold": threshold,
+        "states_affected": int(anom["State_Name"].nunique()),
+        "crops_affected": int(anom["Crop"].nunique()),
+        "anomalies": top_list,
+        "heatmap": heatmap,
+        "top_states": top_states,
+        "top_crops": top_crops,
+        "yearly": yearly,
+    }

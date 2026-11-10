@@ -25,6 +25,7 @@ const groups = [
       { to: '/predict',   icon: '◎', label: 'Predict' },
       { to: '/recommend', icon: '✦', label: 'Recommend' },
       { to: '/cluster',   icon: '⬡', label: 'Clusters' },
+      { to: '/anomaly',   icon: '◈', label: 'Anomalies' },
       { to: '/model',     icon: '◬', label: 'Model' },
     ],
   },

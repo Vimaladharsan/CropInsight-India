@@ -53,6 +53,7 @@ The application has 8 views, each addressing a different angle of the data:
 | **Predict** | Random Forest model inference — input farm parameters, get production estimate + SHAP feature contributions |
 | **Recommend** | Crop Recommender — enter state, season and area to get the top crops ranked by predicted yield |
 | **Clusters** | K-Means unsupervised clustering of states by agricultural profile — PCA scatter, cluster profiles, state table |
+| **Anomalies** | Z-score yield anomaly detection — state×year heatmap, ranked anomaly table, yearly trend, adjustable threshold |
 | **Model** | Feature importance, R²/RMSE/MAE, 3-model comparison — XGBoost vs Random Forest vs Linear Regression |
 
 ---
