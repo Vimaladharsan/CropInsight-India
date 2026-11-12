@@ -22,3 +22,4 @@ export const getRecommend = (state, season, area, year = 2015, topN = 5) =>
 export const getRainfall = () => api.get('/rainfall').then(r => r.data)
 export const getClusters = () => api.get('/clusters').then(r => r.data)
 export const getAnomalies = (threshold = 2.0) => api.get(`/anomalies?threshold=${threshold}`).then(r => r.data)
+export const getCalendar = (state = 'All States') => api.get(`/calendar?state=${encodeURIComponent(state)}`).then(r => r.data)

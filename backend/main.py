@@ -718,6 +718,66 @@ def clusters():
     return data
 
 
+# ── Crop Calendar ────────────────────────────────────────────────────────────
+
+SEASONS_ORDER = ["Kharif", "Rabi", "Whole Year", "Summer", "Zaid"]
+
+@app.get("/api/calendar")
+def calendar(state: str = None, top_n: int = 30, min_records: int = 5):
+    if df is None:
+        raise HTTPException(503, "Dataset not loaded")
+
+    src = df if not state or state == "All States" else df[df["State_Name"] == state]
+
+    # Crop × Season matrix
+    matrix = (
+        src.groupby(["Crop", "Season"])
+        .agg(avg_yield=("Yield", "mean"), avg_area=("Area", "mean"),
+             total_production=("Production", "sum"), records=("Production", "count"))
+        .reset_index()
+    )
+    matrix = matrix[matrix["records"] >= min_records]
+
+    top_crops = src.groupby("Crop")["Production"].count().nlargest(top_n).index.tolist()
+    matrix = matrix[matrix["Crop"].isin(top_crops)]
+
+    crop_order = (
+        src[src["Crop"].isin(top_crops)]
+        .groupby("Crop")["Production"].sum()
+        .sort_values(ascending=False).index.tolist()
+    )
+
+    # Season profiles
+    season_profiles = []
+    for season in SEASONS_ORDER:
+        s_df = src[src["Season"] == season]
+        if s_df.empty:
+            continue
+        top_s = (
+            s_df.groupby("Crop")["Production"].sum().nlargest(5)
+            .reset_index().rename(columns={"Production": "total_production"})
+            .to_dict(orient="records")
+        )
+        season_profiles.append({
+            "season": season,
+            "total_production": round(float(s_df["Production"].sum()), 0),
+            "avg_yield": round(float(s_df["Yield"].mean()), 4),
+            "records": len(s_df),
+            "states": int(s_df["State_Name"].nunique()),
+            "crops": int(s_df["Crop"].nunique()),
+            "top_crops": top_s,
+        })
+
+    return {
+        "crop_order": crop_order,
+        "seasons": SEASONS_ORDER,
+        "matrix": matrix.round(4).to_dict(orient="records"),
+        "season_profiles": season_profiles,
+        "state": state or "All States",
+        "states_list": sorted(df["State_Name"].unique().tolist()),
+    }
+
+
 # ── Anomaly Detection ─────────────────────────────────────────────────────────
 
 @app.get("/api/anomalies")

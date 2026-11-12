@@ -13,6 +13,7 @@ import Recommend from './pages/Recommend'
 import Rainfall from './pages/Rainfall'
 import Cluster from './pages/Cluster'
 import Anomaly from './pages/Anomaly'
+import Calendar from './pages/Calendar'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/model" element={<ModelInsights />} />
             <Route path="/cluster" element={<Cluster />} />
             <Route path="/anomaly" element={<Anomaly />} />
+            <Route path="/calendar" element={<Calendar />} />
           </Routes>
         </main>
       </div>

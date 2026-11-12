@@ -10,6 +10,7 @@ const groups = [
       { to: '/map',       icon: '◉', label: 'Map' },
       { to: '/districts', icon: '⊞', label: 'Districts' },
       { to: '/rainfall',  icon: '🌧', label: 'Rainfall' },
+      { to: '/calendar',  icon: '▦', label: 'Calendar' },
     ],
   },
   {

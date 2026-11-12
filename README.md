@@ -54,6 +54,7 @@ The application has 8 views, each addressing a different angle of the data:
 | **Recommend** | Crop Recommender — enter state, season and area to get the top crops ranked by predicted yield |
 | **Clusters** | K-Means unsupervised clustering of states by agricultural profile — PCA scatter, cluster profiles, state table |
 | **Anomalies** | Z-score yield anomaly detection — state×year heatmap, ranked anomaly table, yearly trend, adjustable threshold |
+| **Calendar** | Crop season calendar — crop × season yield heatmap with per-crop and global color scale, season profile cards |
 | **Model** | Feature importance, R²/RMSE/MAE, 3-model comparison — XGBoost vs Random Forest vs Linear Regression |
 
 ---
